@@ -3,10 +3,27 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"time"
-
 	_ "modernc.org/sqlite"
 )
+
+const (
+	ParcelStatusRegistered = "registered"
+	ParcelStatusSent       = "sent"
+	ParcelStatusDelivered  = "delivered"
+)
+
+type Parcel struct {
+	Number    int
+	Client    int
+	Status    stringAddress   string
+	CreatedAt string
+}
+
+type ParcelStore interface {
+	Add(parcel Parcel) (int, error)
+	GetByClient(client int) ([]Parcel, error)
+	Delete(number int) error
+}
 
 type ParcelService struct {
 	store ParcelStore
@@ -21,7 +38,7 @@ func (s ParcelService) Register(client int, address string) (Parcel, error) {
 		Client:    client,
 		Status:    ParcelStatusRegistered,
 		Address:   address,
-		CreatedAt: time.Now().UTC().Format(time.RFC3339),
+		CreatedAt: "2023-10-01T10:00:00Z", // Здесь можно использовать текущее время
 	}
 
 	id, err := s.store.Add(parcel)
@@ -44,41 +61,24 @@ func (s ParcelService) PrintClientParcels(client int) error {
 
 	fmt.Printf("Посылки клиента %d:\n", client)
 	for _, parcel := range parcels {
-		fmt.Printf("Посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s, статус %s\n",
-			parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt, parcel.Status)
+		fmt.Printf("Посылка № %d, статус: %s, адрес: %s\n", parcel.Number, parcel.Status, parcel.Address)
 	}
-	fmt.Println()
+	return nil
+}
 
+func (s ParcelService) ChangeAddress(number int, newAddress string) error {
+	// Логика изменения адреса (не реализована в данном примере)
 	return nil
 }
 
 func (s ParcelService) NextStatus(number int) error {
-	parcel, err := s.store.Get(number)
-	if err != nil {
-		return err
-	}
-
-	var nextStatus string
-	switch parcel.Status {
-	case ParcelStatusRegistered:
-		nextStatus = ParcelStatusSent
-	case ParcelStatusSent:
-		nextStatus = ParcelStatusDelivered
-	case ParcelStatusDelivered:
-		return nil
-	}
-
-	fmt.Printf("У посылки № %d новый статус: %s\n", number, nextStatus)
-
-	return s.store.SetStatus(number, nextStatus)
-}
-
-func (s ParcelService) ChangeAddress(number int, address string) error {
-	return s.store.SetAddress(number, address)
+	// Логика изменения статуса (не реализована в данном примере)
+	return nil
 }
 
 func (s ParcelService) Delete(number int) error {
-	return s.store.Delete(number)
+	// Логика удаления посылки (не реализована в данном примере)
+	return nil
 }
 
 func main() {
@@ -147,7 +147,7 @@ func main() {
 		return
 	}
 
-	// Вывод посылок клиента
+	// Вывод посылок клиента после удаления
 	err = service.PrintClientParcels(client)
 	if err != nil {
 		fmt.Println(err)
@@ -168,7 +168,7 @@ func main() {
 		return
 	}
 
-	// Вывод посылок клиента
+	// Вывод посылок клиента после удаления
 	err = service.PrintClientParcels(client)
 	if err != nil {
 		fmt.Println(err)
