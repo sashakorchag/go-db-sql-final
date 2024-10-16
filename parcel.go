@@ -17,8 +17,7 @@ const (
 type Parcel struct {
 	Number    int
 	Client    int
-	Status    string
-	Address   string
+	Status    stringAddress   string
 	CreatedAt string
 }
 
@@ -26,7 +25,8 @@ type ParcelStore interface {
 	Add(parcel Parcel) (int, error)
 	Get(number int) (Parcel, error)
 	GetByClient(client int) ([]Parcel, error)
-	SetStatus(number int, status string) error	SetAddress(number int, address string) error
+	SetStatus(number int, status string) error
+	SetAddress(number int, address string) error
 	Delete(number int) error
 }
 
@@ -79,8 +79,7 @@ func (s *SQLiteParcelStore) GetByClient(client int) ([]Parcel, error) {
 	for rows.Next() {
 		var parcel Parcel
 		if err := rows.Scan(&parcel.Number, &parcel.Client, &parcel.Status, &parcel.Address, &parcel.CreatedAt); err != nil {
-			return nil, err
-		}
+			return nil, err	}
 		parcels = append(parcels, parcel)
 	}
 	return parcels, nil
@@ -97,6 +96,17 @@ func (s *SQLiteParcelStore) SetAddress(number int, address string) error {
 }
 
 func (s *SQLiteParcelStore) Delete(number int) error {
-	_, err := s.db.Exec("DELETE FROM parcels WHERE number = ?", number)
+	// Check the status of the parcel before deletion
+	var status string
+	err := s.db.QueryRow("SELECT status FROM parcels WHERE number = ?", number).Scan(&status)
+	if err != nil {
+		return err}
+
+	// Only allow deletion if the status is 'registered'
+	if status != ParcelStatusRegistered {
+		return fmt.Errorf("parcel can only be deleted if status is 'registered'")
+	}
+
+	_, err = s.db.Exec("DELETE FROM parcels WHERE number = ?", number)
 	return err
 }

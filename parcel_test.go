@@ -34,8 +34,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 			client INTEGER,
 			status TEXT,
 			address TEXT,
-			created_at TEXT
-		)
+			created_at TEXT	)
 	`)
 	require.NoError(t, err)
 
@@ -64,6 +63,7 @@ func TestAddGetDelete(t *testing.T) {
 
 	_, err = store.Get(id)
 	require.Error(t, err)
+	require.Equal(t, sql.ErrNoRows, err) // Check specific error for not found
 }
 
 func TestSetAddress(t *testing.T) {
@@ -143,4 +143,20 @@ func TestGetByClient(t *testing.T) {
 		require.Equal(t, expected.Status, parcel.Status)
 		require.Equal(t, expected.Address, parcel.Address)
 	}
+}
+
+func TestDeleteNonRegisteredParcel(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+	store := NewParcelStore(db)
+
+	parcel := getTestParcel()
+	parcel.Status = ParcelStatusSent // Set status to something other than "registered"
+
+	id, err := store.Add(parcel)
+	require.NoError(t, err)
+
+	err = store.Delete(id)
+	require.Error(t, err)
+	require.Equal(t, "parcel can only be deleted if status is 'registered'", err.Error())
 }
