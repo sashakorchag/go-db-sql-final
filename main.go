@@ -15,7 +15,8 @@ const (
 type Parcel struct {
 	Number    int
 	Client    int
-	Status    stringAddress   string
+	Status    string
+	Address   string
 	CreatedAt string
 }
 
@@ -47,7 +48,7 @@ func (s ParcelService) Register(client int, address string) (Parcel, error) {
 	}
 
 	parcel.Number = id
-	fmt.Printf("Новая посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s\n",
+	fmt.Printf("Новая послка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s\n",
 		parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt)
 
 	return parcel, nil
@@ -90,8 +91,7 @@ func main() {
 	}
 	defer db.Close()
 
-	// Создание таблицы, если она не существует
-	_, err = db.Exec(`
+	// Создание таблицы, если она не существует_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS parcels (
 			number INTEGER PRIMARY KEY AUTOINCREMENT,
 			client INTEGER,
